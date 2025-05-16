@@ -1,13 +1,22 @@
 <script lang="ts">
 	import { writable, derived, type Writable, type Readable } from 'svelte/store';
 	import { flip } from 'svelte/animate';
-	import { v7 as uuidv7 } from 'uuid';
+	import { v7 as uuidv7 } from 'uuid'; // User is using v7
+	// Import the necessary type for components
+	// import type { ComponentType } from 'svelte';
+
+	// --- Icon Component Imports (assuming they are in a subfolder) ---
+	import SamplePrepIcon from './icons/SamplePrepIcon.svelte';
+	import DataAcquisitionIcon from './icons/DataAcquisitionIcon.svelte';
+	import AnalysisAlgorithmIcon from './icons/AnalysisAlgorithmIcon.svelte';
+	import VisualizeResultsIcon from './icons/VisualizeResultsIcon.svelte';
+	import ReportGenerationIcon from './icons/ReportGenerationIcon.svelte';
 
 	// --- Type definitions ---
 	interface PaletteBlock {
 		type: string;
 		label: string;
-		icon: string; // Storing raw SVG string
+		iconComponent: typeof SamplePrepIcon; // Using the actual component type
 		color: string; // Tailwind CSS class for background color
 		defaultText: string;
 		estimatedDuration: number; // in seconds for simulation
@@ -19,7 +28,7 @@
 		id: string;
 		type: string;
 		label: string;
-		icon: string; // Raw SVG string
+		iconComponent: typeof SamplePrepIcon; // Using the actual component type
 		color: string; // Tailwind CSS class for background color
 		text: string;
 		status: PhaseStatus;
@@ -33,7 +42,7 @@
 	type DraggingItem = {
 		type: 'paletteItem' | 'workflowItem';
 		id?: string; // For workflow items
-		data: PaletteBlock | ExperimentPhase;
+		data: PaletteBlock | ExperimentPhase; // This will hold the full block or phase data
 	} | null;
 
 	interface OverallProgress {
@@ -48,40 +57,40 @@
 		{
 			type: 'SAMPLE_PREP',
 			label: 'Sample Preparation',
-			icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>`,
-			color: 'bg-sky-500',
+			iconComponent: SamplePrepIcon,
+			color: 'bg-sky-500', // Used for gradient in template: from-sky-500
 			defaultText: 'Prepare and calibrate samples...',
-			estimatedDuration: 10 // in seconds for simulation
+			estimatedDuration: 10
 		},
 		{
 			type: 'DATA_ACQUISITION',
 			label: 'Data Acquisition',
-			icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5Z" /></svg>`,
-			color: 'bg-indigo-500',
+			iconComponent: DataAcquisitionIcon,
+			color: 'bg-indigo-500', // from-indigo-500
 			defaultText: 'Collect data from sensors/instruments...',
 			estimatedDuration: 20
 		},
 		{
 			type: 'ANALYSIS_ALGORITHM',
 			label: 'Analysis Algorithm',
-			icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" /></svg>`,
-			color: 'bg-purple-600',
+			iconComponent: AnalysisAlgorithmIcon,
+			color: 'bg-purple-600', // from-purple-600
 			defaultText: 'Run processing and analysis scripts...',
 			estimatedDuration: 15
 		},
 		{
 			type: 'VISUALIZE_RESULTS',
 			label: 'Visualize Results',
-			icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25A1.125 1.125 0 0 1 9.75 19.875V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" /></svg>`,
-			color: 'bg-green-500',
+			iconComponent: VisualizeResultsIcon,
+			color: 'bg-green-500', // from-green-500
 			defaultText: 'Generate charts and visual outputs...',
 			estimatedDuration: 8
 		},
 		{
 			type: 'REPORT_GENERATION',
 			label: 'Generate Report',
-			icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25M9 17.25h6M16.03 17.25c.017-.005.034-.01.05-.015m-6.13 0c.017.005.034.01.05.015m5.98 0h.01M9.04 17.25h.01M12 3c-1.101 0-2.07.316-2.91.866M12 3c1.101 0 2.07.316 2.91.866m-5.82 0A21.016 21.016 0 0 0 3.75 6v10.5A2.25 2.25 0 0 0 6 18.75h12A2.25 2.25 0 0 0 20.25 16.5V6a21.016 21.016 0 0 0-2.41-.134M12 3v3.375c0 .621.504 1.125 1.125 1.125h1.5c.621 0 1.125-.504 1.125-1.125V3m-3.75 0V3.75M9.75 3v3.375c0 .621-.504 1.125-1.125 1.125h-1.5A1.125 1.125 0 0 1 6 6.375V3m5.25 9.75A1.5 1.5 0 0 1 10.5 15H9a1.5 1.5 0 0 1-1.5-1.5V9A1.5 1.5 0 0 1 9 7.5h1.5a1.5 1.5 0 0 1 1.5 1.5v3.75Z" /></svg>`,
-			color: 'bg-amber-500',
+			iconComponent: ReportGenerationIcon,
+			color: 'bg-amber-500', // from-amber-500
 			defaultText: 'Compile findings into a final report...',
 			estimatedDuration: 12
 		}
@@ -92,27 +101,21 @@
 
 	// --- Drag and Drop State Variables ---
 	let draggingItem: DraggingItem = null;
-	let dragOverCanvas = false; // True if dragging over the canvas drop zone
-	let dragOverPhaseId: string | null = null; // ID of the phase being dragged over (for reordering)
+	let dragOverCanvas = false;
+	let dragOverPhaseId: string | null = null;
 
 	// --- Simulation Interval Store ---
-	// This will store interval IDs for each running phase to manage simulation
-	let phaseIntervals: Record<string, number> = {};
+	let phaseIntervals: Record<string, number> = {}; // Store interval IDs (number from setInterval)
 
 	// --- Derived store for overall experiment progress ---
 	const overallExperimentProgress: Readable<OverallProgress> = derived(
 		experimentPhases,
 		($phases) => {
 			if ($phases.length === 0) {
-				return {
-					averageProgress: 0,
-					completedCount: 0,
-					totalCount: 0,
-					isComplete: false
-				};
+				return { averageProgress: 0, completedCount: 0, totalCount: 0, isComplete: false };
 			}
 			const totalProgress = $phases.reduce((sum, phase) => sum + (phase.progress || 0), 0);
-			const avgProgress = totalProgress / $phases.length;
+			const avgProgress = $phases.length > 0 ? totalProgress / $phases.length : 0;
 			const completedPhases = $phases.filter((p) => p.status === 'completed').length;
 			const totalPhases = $phases.length;
 			return {
@@ -128,7 +131,7 @@
 	function handlePaletteDragStart(event: DragEvent, blockType: PaletteBlock) {
 		if (event.dataTransfer) {
 			event.dataTransfer.effectAllowed = 'copy';
-			event.dataTransfer.setData('text/plain', blockType.type);
+			event.dataTransfer.setData('text/plain', blockType.type); // Keep type for potential other uses
 		}
 		draggingItem = { type: 'paletteItem', data: blockType };
 		dragOverCanvas = false;
@@ -142,12 +145,11 @@
 	}
 
 	function handleCanvasDragOver(event: DragEvent) {
-		event.preventDefault(); // Necessary to allow dropping
+		event.preventDefault();
 		if (event.dataTransfer) {
 			if (draggingItem?.type === 'paletteItem') {
 				event.dataTransfer.dropEffect = 'copy';
 			} else if (draggingItem?.type === 'workflowItem') {
-				// Allow moving workflow items within the canvas list
 				event.dataTransfer.dropEffect = 'move';
 			}
 		}
@@ -155,7 +157,6 @@
 	}
 
 	function handleCanvasDragLeave(event: DragEvent) {
-		// Check if the mouse truly left the canvas or entered a child element
 		if (event.currentTarget === event.target) {
 			dragOverCanvas = false;
 		}
@@ -164,25 +165,23 @@
 	function handleCanvasDrop(event: DragEvent) {
 		event.preventDefault();
 		if (draggingItem?.type === 'paletteItem') {
-			// Add new item from palette
-			const block = draggingItem.data as PaletteBlock; // Cast for type safety
+			const block = draggingItem.data as PaletteBlock;
 			const newPhase: ExperimentPhase = {
-				id: uuidv7(), // Generate a unique ID for the new phase
+				id: uuidv7(),
 				type: block.type,
 				label: block.label,
-				icon: block.icon,
+				iconComponent: block.iconComponent, // Use iconComponent
 				color: block.color,
 				text: block.defaultText || `New ${block.label} Phase`,
-				status: 'pending', // Initial status
-				progress: 0, // Initial progress
-				estimatedDuration: block.estimatedDuration || 10, // seconds
+				status: 'pending',
+				progress: 0,
+				estimatedDuration: block.estimatedDuration || 10,
 				actualDuration: null,
 				logs: [],
-				canBeRun: true // Simple flag
+				canBeRun: true
 			};
 			experimentPhases.update((phases) => [...phases, newPhase]);
 		}
-		// Reordering logic is handled by individual phase item drop handlers
 		dragOverCanvas = false;
 		// draggingItem is reset in handleDragEnd
 	}
@@ -191,9 +190,8 @@
 	function handlePhaseDragStart(event: DragEvent, phase: ExperimentPhase) {
 		if (event.dataTransfer) {
 			event.dataTransfer.effectAllowed = 'move';
-			event.dataTransfer.setData('text/plain', phase.id); // Use phase.id for reordering
+			event.dataTransfer.setData('text/plain', phase.id);
 		}
-		// Use type 'workflowItem' for items originating from the canvas itself
 		draggingItem = { type: 'workflowItem', id: phase.id, data: phase };
 		dragOverPhaseId = null;
 	}
@@ -211,7 +209,7 @@
 			if (draggingItem?.type === 'workflowItem') {
 				event.dataTransfer.dropEffect = 'move';
 			} else {
-				event.dataTransfer.dropEffect = 'none'; // Don't allow dropping palette items directly onto phases (only on canvas)
+				event.dataTransfer.dropEffect = 'none';
 			}
 		}
 	}
@@ -222,50 +220,60 @@
 		}
 	}
 
+	// Preserving user's reordering logic from their provided script
 	function handlePhaseDrop(event: DragEvent, targetPhaseId: string) {
 		event.preventDefault();
-		event.stopPropagation(); // Prevent canvas drop from firing as well
+		event.stopPropagation();
 
 		if (draggingItem?.type !== 'workflowItem' || !draggingItem.id) return;
 
 		const sourcePhaseId = draggingItem.id;
 		if (sourcePhaseId === targetPhaseId) {
 			dragOverPhaseId = null;
-			// draggingItem is reset in handleDragEnd
 			return;
 		}
 
 		experimentPhases.update((currentPhases) => {
 			const sourceIndex = currentPhases.findIndex((p) => p.id === sourcePhaseId);
-			let targetIndex = currentPhases.findIndex((p) => p.id === targetPhaseId);
+			let targetIndex = currentPhases.findIndex((p) => p.id === targetPhaseId); // Original target index
 
 			if (sourceIndex === -1 || targetIndex === -1) return currentPhases;
 
-			// Remove the dragged phase from its original position
 			const [draggedPhase] = currentPhases.splice(sourceIndex, 1);
 
-			// Insert the dragged phase at the target position
-			// If dragging downwards, the targetIndex might have shifted. Re-find it or adjust.
-			// A simpler way: splice removes the item, then we find the index to insert.
-			// targetIndex might need adjustment if sourceIndex < targetIndex.
-			// However, splice already accounts for this shift for elements *after* the source.
-			// If sourceIndex < targetIndex, the elements at targetIndex and beyond shift left by 1.
-			// If sourceIndex > targetIndex, elements don't shift relative to targetIndex.
-			// The simplest reliable way is to find the new index of the target element after removal.
-			const newTargetIndex = currentPhases.findIndex((p) => p.id === targetPhaseId);
-			if (newTargetIndex !== -1) {
-				currentPhases.splice(newTargetIndex + (sourceIndex < targetIndex ? 0 : 0), 0, draggedPhase); // Correction: insert *before* target
-			} else {
-				// Target might have been the removed item itself if it was the last one or something
-				// This case should ideally not happen with the sourceId !== targetId check.
-				// But as a fallback, re-add at the end.
-				currentPhases.push(draggedPhase);
-			}
+			// After removing, the targetIndex might need adjustment if sourceIndex was before it.
+			// However, we want to insert *before* the original target item.
+			// If sourceIndex < targetIndex, the original targetItem has shifted left by 1.
+			// So, the new insertion index is the original targetIndex - 1 (if targetIndex was its original pos).
+			// Or, more simply, find the index of targetPhaseId *again* in the modified array.
 
+			const newTargetActualIndex = currentPhases.findIndex((p) => p.id === targetPhaseId);
+
+			if (newTargetActualIndex !== -1) {
+				// Determine if inserting before or after the target based on drag direction
+				// This logic can be tricky. A common approach is to insert at the found newTargetActualIndex
+				// if dragging downwards onto the top half of an item, or newTargetActualIndex + 1 for bottom half.
+				// For simplicity here, we'll insert at the position of the target item, effectively placing it before.
+				// If sourceIndex < original targetIndex, it means we dragged down.
+				// If sourceIndex > original targetIndex, it means we dragged up.
+				currentPhases.splice(newTargetActualIndex, 0, draggedPhase);
+			} else {
+				// This case implies the targetId was not found after splice, which is unusual
+				// unless targetId was the same as sourceId (already handled).
+				// Fallback: if the original targetIndex was at the end after removal.
+				if (targetIndex > sourceIndex && targetIndex === currentPhases.length) {
+					// If it was the last element
+					currentPhases.push(draggedPhase);
+				} else if (targetIndex < sourceIndex) {
+					currentPhases.splice(targetIndex, 0, draggedPhase);
+				} else {
+					// Default to end if logic gets complicated
+					currentPhases.push(draggedPhase);
+				}
+			}
 			return currentPhases;
 		});
 		dragOverPhaseId = null;
-		// draggingItem is reset in handleDragEnd
 	}
 
 	// --- General Drag End Handler ---
@@ -275,10 +283,9 @@
 		dragOverPhaseId = null;
 	}
 
-	// --- Function to remove a phase ---\
+	// --- Function to remove a phase ---
 	function removePhase(phaseId: string) {
 		experimentPhases.update((phases) => phases.filter((p) => p.id !== phaseId));
-		// Clear simulation interval if it exists
 		if (phaseIntervals[phaseId]) {
 			clearInterval(phaseIntervals[phaseId]);
 			delete phaseIntervals[phaseId];
@@ -298,21 +305,14 @@
 			return phases.map((p) => {
 				if (p.id === phaseId) {
 					if (p.status === 'running') {
-						// Pause functionality
 						if (phaseIntervals[p.id]) clearInterval(phaseIntervals[p.id]);
 						delete phaseIntervals[p.id];
-						return { ...p, status: 'paused' };
+						return { ...p, status: 'paused' as PhaseStatus };
 					} else if (p.status === 'pending' || p.status === 'paused' || p.status === 'failed') {
-						// Start or Resume
-						// Clear any existing interval for this phase before starting a new one
 						if (phaseIntervals[p.id]) clearInterval(phaseIntervals[p.id]);
-
 						const startTime = Date.now();
-						// Simulate progress every 200ms. Adjust for smoother/faster simulation.
-						// Progress increment is based on estimated duration to make longer tasks take longer.
-						// Divide estimated duration by interval to get number of steps. 100 / steps.
-						const steps = p.estimatedDuration * (1000 / 200); // 200ms interval
-						const progressIncrement = steps > 0 ? 100 / steps : 100; // Avoid division by zero
+						const steps = p.estimatedDuration * (1000 / 200);
+						const progressIncrement = steps > 0 ? 100 / steps : 100;
 
 						phaseIntervals[p.id] = window.setInterval(() => {
 							experimentPhases.update((current) => {
@@ -327,7 +327,7 @@
 											return {
 												...phaseToUpdate,
 												progress: 100,
-												status: 'completed',
+												status: 'completed' as PhaseStatus,
 												actualDuration: `${duration}s`,
 												logs: [
 													...phaseToUpdate.logs,
@@ -340,18 +340,17 @@
 									return phaseToUpdate;
 								});
 							});
-						}, 200); // Run simulation step every 200ms
+						}, 200);
 						return {
 							...p,
-							status: 'running',
-							progress: p.status === 'paused' ? p.progress : 0, // Resume from paused progress
+							status: 'running' as PhaseStatus,
+							progress: p.status === 'paused' ? p.progress : 0,
 							logs: [...p.logs, `Phase execution started at ${new Date().toLocaleTimeString()}`]
 						};
 					} else if (p.status === 'completed') {
-						// Reset and Re-run
 						return {
 							...p,
-							status: 'pending',
+							status: 'pending' as PhaseStatus,
 							progress: 0,
 							actualDuration: null,
 							logs: [`Phase reset at ${new Date().toLocaleTimeString()}`]
@@ -365,24 +364,35 @@
 
 	// --- Function to run all pending phases sequentially ---
 	async function runAllPhases() {
-		const phasesToRun = $experimentPhases.filter(
-			(p) => p.status === 'pending' || p.status === 'failed'
-		);
-		for (const phase of phasesToRun) {
-			// Ensure phase is not already running or completed from a previous manual click or run
-			const currentState = $experimentPhases.find((p) => p.id === phase.id);
-			if (currentState && (currentState.status === 'pending' || currentState.status === 'failed')) {
+		// Get a snapshot of phases to run to avoid issues with store updates during iteration
+		let phasesToRunSnapshot: ExperimentPhase[] = [];
+		// Immediately invoke subscribe to get current value and unsubscribe
+		experimentPhases.subscribe((currentPhases) => {
+			phasesToRunSnapshot = currentPhases.filter(
+				(p) => p.status === 'pending' || p.status === 'failed'
+			);
+		})(); // Immediately invoke to get current value and unsubscribe
+
+		for (const phase of phasesToRunSnapshot) {
+			// Check the *current* state of the phase from the store before toggling
+			let currentPhaseState: ExperimentPhase | undefined;
+			// Immediately invoke subscribe to get current value and unsubscribe
+			experimentPhases.subscribe((updatedPhases) => {
+				currentPhaseState = updatedPhases.find((p) => p.id === phase.id);
+			})();
+
+			if (
+				currentPhaseState &&
+				(currentPhaseState.status === 'pending' || currentPhaseState.status === 'failed')
+			) {
 				togglePhaseExecution(phase.id);
-				// Wait for the current phase to complete or fail before starting the next one
+				// Wait for the phase to complete or fail
 				await new Promise<void>((resolve) => {
-					const unsub = experimentPhases.subscribe((updatedPhases) => {
-						const currentPhaseState = updatedPhases.find((p) => p.id === phase.id);
-						// Resolve if the phase is completed or failed
-						if (
-							currentPhaseState?.status === 'completed' ||
-							currentPhaseState?.status === 'failed'
-						) {
-							if (unsub) unsub(); // Unsubscribe once resolved
+					const unsubWait = experimentPhases.subscribe((updatedPhases) => {
+						const phaseAfterToggle = updatedPhases.find((p) => p.id === phase.id);
+						if (phaseAfterToggle?.status === 'completed' || phaseAfterToggle?.status === 'failed') {
+							// Ensure we only unsubscribe if unsubWait is assigned (which it always will be here)
+							unsubWait();
 							resolve();
 						}
 					});
@@ -393,20 +403,16 @@
 
 	// --- Helper to get status color ---
 	function getStatusColor(status: PhaseStatus | undefined): string {
-		switch (status) {
-			case 'pending':
-				return 'bg-gray-400';
-			case 'running':
-				return 'bg-blue-500 animate-pulse';
-			case 'completed':
-				return 'bg-green-500';
-			case 'paused':
-				return 'bg-yellow-500';
-			case 'failed':
-				return 'bg-red-500';
-			default:
-				return 'bg-gray-300'; // Should not happen with defined statuses
-		}
+		// Palette colors are like 'bg-sky-500'. We need to transform them for gradient.
+		// Example: 'bg-sky-500' -> 'from-sky-600 to-sky-400' (adjust shades as needed)
+		const colorMap: Record<PhaseStatus, string> = {
+			pending: 'from-gray-500 to-gray-400',
+			running: 'from-blue-600 to-blue-400 animate-pulse', // Pulse on the gradient
+			completed: 'from-green-600 to-green-400',
+			paused: 'from-yellow-500 to-yellow-400',
+			failed: 'from-red-600 to-red-400'
+		};
+		return status ? colorMap[status] || 'from-gray-400 to-gray-300' : 'from-gray-400 to-gray-300';
 	}
 
 	// --- Helper to get button text for execution ---
@@ -433,15 +439,17 @@
 		for (const id in phaseIntervals) {
 			clearInterval(phaseIntervals[id]);
 		}
-		phaseIntervals = {}; // Reset the object
+		phaseIntervals = {};
 	});
 </script>
 
-<!-- Main Layout -->
-<div class="flex h-screen flex-col bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 font-sans text-white md:flex-row">
-	<!-- Sidebar Palette -->
-	<aside class="w-full space-y-3 overflow-y-auto bg-gray-800/90 p-6 shadow-xl border-r border-gray-700/30 backdrop-blur-sm md:w-72 lg:w-80">
-		<h2 class="mb-6 border-b border-gray-700/70 pb-3 text-2xl font-bold text-sky-400 tracking-wide">
+<div
+	class="flex h-screen flex-col bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 font-sans text-white md:flex-row"
+>
+	<aside
+		class="w-full space-y-3 overflow-y-auto border-r border-gray-700/30 bg-gray-800/90 p-6 shadow-xl backdrop-blur-sm md:w-72 lg:w-80"
+	>
+		<h2 class="mb-6 border-b border-gray-700/70 pb-3 text-2xl font-bold tracking-wide text-sky-400">
 			Experiment Phases
 		</h2>
 		{#each paletteBlocks as block (block.type)}
@@ -449,45 +457,48 @@
 				draggable="true"
 				on:dragstart={(event) => handlePaletteDragStart(event, block)}
 				on:dragend={handleDragEnd}
-				class="p-4 from-{block.color.replace('bg-', '')} to-{block.color.replace('bg-', '')}/80 bg-gradient-to-br flex cursor-grab items-center space-x-3 rounded-xl text-white shadow-md transition-all duration-200 hover:shadow-lg hover:translate-y-[-2px] hover:scale-[1.02] border border-white/10"
+				class="p-4 from-{block.color.replace('bg-', '')} to-{block.color.replace(
+					'bg-',
+					''
+				)}/80 flex cursor-grab items-center space-x-3 rounded-xl border border-white/10 bg-gradient-to-br text-white shadow-md transition-all duration-200 hover:translate-y-[-2px] hover:scale-[1.02] hover:shadow-lg"
 				role="button"
 				tabindex="0"
 				aria-label={`Add ${block.label} phase`}
 			>
 				<div class="h-7 w-7 flex-shrink-0" aria-hidden="true">
-					<!-- Using @html to render SVG string -->
-					{@html block.icon}
+					<svelte:component this={block.iconComponent} />
 				</div>
 				<span class="font-medium">{block.label}</span>
 			</div>
 		{/each}
 	</aside>
 
-	<!-- Main Canvas Area -->
 	<main
-		class="flex-1 overflow-y-auto p-5 md:p-7 lg:p-10 bg-gray-900/60 backdrop-blur-sm"
+		class="flex-1 overflow-y-auto bg-gray-900/60 p-5 backdrop-blur-sm md:p-7 lg:p-10"
 		on:dragenter={handleCanvasDragEnter}
 		on:dragover={handleCanvasDragOver}
 		on:dragleave={handleCanvasDragLeave}
 		on:drop={handleCanvasDrop}
 	>
-		<!-- Canvas Header -->
 		<div class="mb-8 flex items-center justify-between border-b border-gray-700/60 pb-5">
-			<h1 class="text-3xl font-extrabold text-sky-300 md:text-4xl tracking-wide">Experiment Canvas</h1>
+			<h1 class="text-3xl font-extrabold tracking-wide text-sky-300 md:text-4xl">
+				Experiment Canvas
+			</h1>
 			{#if $experimentPhases.length > 0}
 				<button
 					on:click={runAllPhases}
-					class="rounded-lg px-5 py-2.5 font-semibold text-white transition-all duration-200 shadow-lg transform hover:translate-y-[-2px] hover:shadow-xl active:translate-y-0 active:shadow-md
+					class="transform rounded-lg px-5 py-2.5 font-semibold text-white shadow-lg transition-all duration-200 hover:translate-y-[-2px] hover:shadow-xl active:translate-y-0 active:shadow-md
                            {$experimentPhases.some((p) => p.status === 'running')
 						? 'bg-gradient-to-r from-yellow-600 to-amber-600 hover:from-yellow-700 hover:to-amber-700'
 						: 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700'}
                            disabled:cursor-not-allowed disabled:opacity-50"
-					disabled={$experimentPhases.length === 0 || $overallExperimentProgress.isComplete}
+					disabled={$experimentPhases.some((p) => p.status === 'running') &&
+						!$overallExperimentProgress.isComplete}
 				>
 					{#if $overallExperimentProgress.isComplete}
-						Experiment Complete!
+						Run All Again
 					{:else if $experimentPhases.some((p) => p.status === 'running')}
-						Running All...
+						Experiment Running...
 					{:else}
 						Run All Pending
 					{/if}
@@ -495,15 +506,16 @@
 			{/if}
 		</div>
 
-		<!-- Overall Progress Bar (Visible only if phases exist) -->
 		{#if $experimentPhases.length > 0}
-			<div class="mb-8 rounded-xl bg-gray-800/80 p-5 shadow-lg border border-gray-700/50 backdrop-blur-sm">
+			<div
+				class="mb-8 rounded-xl border border-gray-700/50 bg-gray-800/80 p-5 shadow-lg backdrop-blur-sm"
+			>
 				<h3 class="mb-3 text-xl font-bold text-sky-400">Overall Progress</h3>
 				<div class="flex items-center space-x-4">
 					<div class="flex-1">
 						<div class="h-4 w-full rounded-full bg-gray-700/80 shadow-inner">
 							<div
-								class="h-4 rounded-full bg-gradient-to-r from-sky-600 to-sky-400 transition-all duration-500 ease-in-out shadow-lg"
+								class="h-4 rounded-full bg-gradient-to-r from-sky-600 to-sky-400 shadow-lg transition-all duration-500 ease-in-out"
 								style="width: {$overallExperimentProgress.averageProgress}%;"
 								aria-valuenow={$overallExperimentProgress.averageProgress}
 								aria-valuemin="0"
@@ -520,13 +532,14 @@
 						completed)
 					</span>
 				</div>
-				{#if $overallExperimentProgress.isComplete}
-					<p class="mt-3 font-medium text-green-400 flex items-center"><span class="mr-2 text-lg">✓</span>Experiment successfully completed!</p>
+				{#if $overallExperimentProgress.isComplete && $experimentPhases.length > 0}
+					<p class="mt-3 flex items-center font-medium text-green-400">
+						<span class="mr-2 text-lg">✓</span>Experiment successfully completed!
+					</p>
 				{/if}
 			</div>
 		{/if}
 
-		<!-- Empty Canvas Message -->
 		{#if $experimentPhases.length === 0}
 			<div
 				class="flex min-h-[300px] flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 text-gray-500
@@ -550,19 +563,18 @@
 						d="M9.75h6.75m-6.75 0a3 3 0 01-3-3h12.75a3 3 0 01-3 3m0 0a3 3 0 00-3 3h.375m6.375 0h.375a3 3 0 003-3V6.75A3 3 0 0016.5 3.75h-9a3 3 0 00-3 3V15a3 3 0 003 3zm-3.75-9h15m-15 0v9A1.5 1.5 0 007.5 18h9a1.5 1.5 0 001.5-1.5v-9A1.5 1.5 0 0016.5 6H7.5A1.5 1.5 0 006 7.5z"
 					/>
 				</svg>
-				<p class="text-xl font-bold text-sky-400 mb-2">Empty Canvas</p>
-				<p class="text-base text-gray-400 max-w-md text-center">
+				<p class="mb-2 text-xl font-bold text-sky-400">Empty Canvas</p>
+				<p class="max-w-md text-center text-base text-gray-400">
 					Drag phases from the left panel and drop them here to build your experiment workflow.
 				</p>
 			</div>
 		{:else}
-			<!-- Experiment Phases List -->
 			<ul
 				class="min-h-[300px] space-y-5 rounded-xl p-2
                {dragOverCanvas &&
 				draggingItem?.type === 'paletteItem' &&
 				$experimentPhases.length > 0
-					? 'bg-sky-900/30 outline-2 outline-sky-500 outline-dashed shadow-inner'
+					? 'bg-sky-900/30 shadow-inner outline-2 outline-sky-500 outline-dashed'
 					: ''}
                transition-all duration-300"
 				role="list"
@@ -577,25 +589,26 @@
 						on:drop={(event) => handlePhaseDrop(event, phase.id)}
 						on:dragend={handleDragEnd}
 						role="listitem"
-						class="p-5 from-{phase.color.replace('bg-', '')} to-{phase.color.replace('bg-', '')}/90 bg-gradient-to-br group relative flex cursor-grab flex-col rounded-xl text-white shadow-lg border border-white/10 backdrop-blur-sm backdrop-saturate-150
-                   transition-all duration-200 ease-in-out 
-                   {draggingItem?.id === phase.id
-							? 'scale-95 opacity-60 shadow-xl rotate-1'
-							: 'scale-100 opacity-100 hover:shadow-xl hover:-translate-y-1'}
-                   {dragOverPhaseId === phase.id && draggingItem?.id !== phase.id
+						class="p-5 from-{phase.color.replace('bg-', '')} to-{phase.color.replace(
+							'bg-',
+							''
+						)}/90 group relative flex cursor-grab flex-col rounded-xl border border-white/10 bg-gradient-to-br text-white shadow-lg backdrop-blur-sm backdrop-saturate-150
+                       transition-all duration-200 ease-in-out
+                       {draggingItem?.id === phase.id
+							? 'scale-95 rotate-1 opacity-60 shadow-xl'
+							: 'scale-100 opacity-100 hover:-translate-y-1 hover:shadow-xl'}
+                       {dragOverPhaseId === phase.id && draggingItem?.id !== phase.id
 							? 'ring-4 ring-sky-400 ring-offset-2 ring-offset-gray-900'
 							: ''}"
 						animate:flip={{ duration: 300 }}
 					>
-						<!-- Phase Header -->
 						<div class="mb-3 flex items-center justify-between">
 							<div class="flex items-center space-x-3">
 								<div
-									class="h-7 w-7 flex-shrink-0 opacity-80 transition-opacity group-hover:opacity-100"
+									class="flex h-7 w-7 flex-shrink-0 items-center justify-center opacity-80 transition-opacity group-hover:opacity-100"
 									aria-hidden="true"
 								>
-									<!-- Using @html to render SVG string -->
-									{#if phase.icon}{@html phase.icon}{/if}
+									<svelte:component this={phase.iconComponent} />
 								</div>
 								<span class="text-lg font-semibold transition-colors group-hover:text-sky-300"
 									>{phase.label}</span
@@ -620,21 +633,19 @@
 							</button>
 						</div>
 
-						<!-- Phase Description Input -->
 						<textarea
 							bind:value={phase.text}
 							on:change={(e) => updatePhaseText(phase.id, (e.target as HTMLTextAreaElement).value)}
-							class="mb-4 w-full resize-none rounded-lg border border-gray-600/50 bg-gray-700/50 p-3 text-sm text-gray-200 placeholder-gray-500 outline-none shadow-inner transition-all duration-200 focus:bg-gray-700/80 focus:ring-2 focus:ring-sky-500 focus:shadow-md"
+							class="mb-4 w-full resize-none rounded-lg border border-gray-600/50 bg-gray-700/50 p-3 text-sm text-gray-200 placeholder-gray-500 shadow-inner transition-all duration-200 outline-none focus:bg-gray-700/80 focus:shadow-md focus:ring-2 focus:ring-sky-500"
 							placeholder="Describe this phase or add notes..."
 							rows="2"
 							aria-label={`Description for ${phase.label} phase`}
 						></textarea>
 
-						<!-- Phase Progress Bar -->
 						<div class="mb-4 flex items-center space-x-3">
 							<div class="h-3 w-full rounded-full bg-gray-700/70 shadow-inner">
 								<div
-									class="h-3 rounded-full shadow-md {getStatusColor(phase.status).replace('bg-', 'bg-gradient-to-r from-').replace('-500', '-600 to-').replace('-500', '-400')}"
+									class="h-3 rounded-full bg-gradient-to-r shadow-md {getStatusColor(phase.status)}"
 									style="width: {phase.progress}%;"
 									aria-valuenow={phase.progress}
 									aria-valuemin="0"
@@ -645,20 +656,19 @@
 							<span class="text-sm font-bold text-sky-300">{Math.round(phase.progress)}%</span>
 						</div>
 
-						<!-- Phase Status and Duration -->
 						<div class="flex items-center justify-between text-xs text-gray-400">
 							<div class="flex items-center space-x-2">
 								<span
-									class="rounded-full px-2.5 py-0.5 text-[10px] font-bold text-white uppercase ring-1 ring-white/20 shadow-sm {getStatusColor(
+									class="rounded-full bg-gradient-to-r px-2.5 py-0.5 text-[10px] font-bold text-white uppercase shadow-sm ring-1 ring-white/20 {getStatusColor(
 										phase.status
-									).replace('bg-', 'bg-gradient-to-r from-').replace('-500', '-600 to-').replace('-500', '-400')}"
+									)}"
 								>
 									{phase.status}
 								</span>
 								{#if phase.actualDuration}
 									<span class="flex items-center space-x-1.5">
-									<span class="font-semibold text-sky-300">Actual:</span>
-									<span class="font-medium">{phase.actualDuration}</span>
+										<span class="font-semibold text-sky-300">Actual:</span>
+										<span class="font-medium">{phase.actualDuration}</span>
 									</span>
 								{:else if phase.status === 'pending'}
 									<span class="flex items-center space-x-1.5">
@@ -667,30 +677,47 @@
 									</span>
 								{/if}
 							</div>
-							<!-- Run/Pause/Resume Button -->
 							<button
 								on:click={() => togglePhaseExecution(phase.id)}
-								class="rounded-lg bg-gray-700 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-gray-600 shadow hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 border border-gray-600/30"
-								disabled={!phase.canBeRun && phase.status !== 'running'}
+								class="rounded-lg border border-gray-600/30 bg-gray-700 px-3.5 py-1.5 text-xs font-semibold text-white shadow transition-all duration-200 hover:-translate-y-0.5 hover:bg-gray-600 hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
+								disabled={!phase.canBeRun &&
+									phase.status !== 'running' &&
+									phase.status !== 'paused' &&
+									phase.status !== 'failed'}
 								aria-label="{getRunButtonText(phase.status)} {phase.label} phase"
 							>
 								{getRunButtonText(phase.status)}
 							</button>
 						</div>
 
-						<!-- Phase Logs (Visible if logs exist) -->
 						{#if phase.logs && phase.logs.length > 0}
 							<div class="mt-4 border-t border-gray-700/30 pt-3">
-								<details class="text-xs group">
-									<summary class="cursor-pointer flex items-center font-medium text-gray-500 hover:text-sky-300 transition-colors duration-200">
-										<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+								<details class="group text-xs">
+									<summary
+										class="flex cursor-pointer items-center font-medium text-gray-500 transition-colors duration-200 hover:text-sky-300"
+									>
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											class="mr-1.5 h-3 w-3"
+											fill="none"
+											viewBox="0 0 24 24"
+											stroke="currentColor"
+											aria-hidden="true"
+										>
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+											/>
 										</svg>
 										Logs ({phase.logs.length})
 									</summary>
-									<ul class="mt-2 max-h-24 space-y-1 overflow-y-auto pl-2 pr-1 py-1.5 bg-black/20 rounded-lg shadow-inner">
+									<ul
+										class="mt-2 max-h-24 space-y-1 overflow-y-auto rounded-lg bg-black/20 py-1.5 pr-1 pl-2 shadow-inner"
+									>
 										{#each phase.logs as logMsg, i (i)}
-											<li class="font-mono text-gray-400 text-[10px] leading-tight">{logMsg}</li>
+											<li class="font-mono text-[10px] leading-tight text-gray-400">{logMsg}</li>
 										{/each}
 									</ul>
 								</details>
@@ -701,11 +728,11 @@
 			</ul>
 		{/if}
 
-		<!-- Debug JSON Output (Visible if phases exist) -->
 		{#if $experimentPhases.length > 0}
-			<div class="mt-10 rounded-xl bg-gradient-to-br from-gray-800 to-gray-900 p-5 shadow-lg border border-gray-700/30">
+			<div
+				class="mt-10 rounded-xl border border-gray-700/30 bg-gradient-to-br from-gray-800 to-gray-900 p-5 shadow-lg"
+			>
 				<h3 class="mb-3 text-xl font-bold text-sky-400">Experiment Data Structure (JSON)</h3>
-				<!-- Using standard text binding for safer JSON output -->
 				<pre
 					class="max-h-60 overflow-y-auto rounded-lg bg-black/30 p-4 text-xs break-all whitespace-pre-wrap shadow-inner">{JSON.stringify(
 						$experimentPhases,
@@ -716,53 +743,57 @@
 		{/if}
 	</main>
 </div>
-```
 
-<!-- Styles -->
 <style>
 	/* Using Tailwind CSS classes primarily. */
-
-	/* Minor style to improve drag image (browser dependent) */
 	[draggable='true'] {
-		user-select: none; /* Prevent text selection when dragging */
+		user-select: none;
 	}
-
-	/* Custom scrollbar styles for log output */
 	.max-h-20::-webkit-scrollbar {
+		/* User had max-h-20, logs list is max-h-24, will adjust if needed or keep as is */
 		width: 8px;
 	}
-
 	.max-h-20::-webkit-scrollbar-track {
-		background: #374151; /* gray-700 */
+		background: #374151;
 		border-radius: 4px;
 	}
-
 	.max-h-20::-webkit-scrollbar-thumb {
-		background: #6b7280; /* gray-500 */
+		background: #6b7280;
 		border-radius: 4px;
 	}
-
 	.max-h-20::-webkit-scrollbar-thumb:hover {
-		background: #9ca3af; /* gray-400 */
+		background: #9ca3af;
 	}
 
-	/* Custom scrollbar styles for JSON output */
+	/* For .max-h-24 used in logs */
+	.max-h-24::-webkit-scrollbar {
+		width: 8px;
+	}
+	.max-h-24::-webkit-scrollbar-track {
+		background: rgba(0, 0, 0, 0.2); /* From user's original log scrollbar style */
+		border-radius: 4px;
+	}
+	.max-h-24::-webkit-scrollbar-thumb {
+		background: rgba(255, 255, 255, 0.2); /* From user's original log scrollbar style */
+		border-radius: 4px;
+	}
+	.max-h-24::-webkit-scrollbar-thumb:hover {
+		background: rgba(255, 255, 255, 0.4); /* From user's original log scrollbar style */
+	}
+
 	pre::-webkit-scrollbar {
 		height: 8px;
 		width: 8px;
 	}
-
 	pre::-webkit-scrollbar-track {
-		background: #1f2937; /* gray-800 or gray-900 */
+		background: #1f2937;
 		border-radius: 4px;
 	}
-
 	pre::-webkit-scrollbar-thumb {
-		background: #4b5563; /* gray-600 */
+		background: #4b5563;
 		border-radius: 4px;
 	}
-
 	pre::-webkit-scrollbar-thumb:hover {
-		background: #6b7280; /* gray-500 */
+		background: #6b7280;
 	}
 </style>

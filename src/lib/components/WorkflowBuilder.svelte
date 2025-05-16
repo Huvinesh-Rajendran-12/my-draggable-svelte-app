@@ -223,15 +223,22 @@
 	}
 </script>
 
-<div class="flex h-screen flex-col bg-gradient-to-br from-gray-50 to-gray-100 font-sans text-gray-800 md:flex-row">
+<div
+	class="flex h-screen flex-col bg-gradient-to-br from-gray-50 to-gray-100 font-sans text-gray-800 md:flex-row"
+>
 	<aside class="w-full space-y-3 overflow-y-auto bg-white p-5 shadow-lg md:w-64 lg:w-72">
-		<h2 class="mb-5 text-2xl font-bold text-gray-800 border-b border-gray-100 pb-3">Workflow Blocks</h2>
+		<h2 class="mb-5 border-b border-gray-100 pb-3 text-2xl font-bold text-gray-800">
+			Workflow Blocks
+		</h2>
 		{#each paletteBlocks as block (block.type)}
 			<div
 				draggable="true"
 				on:dragstart={(event) => handlePaletteDragStart(event, block)}
 				on:dragend={handleDragEnd}
-				class="p-4 from-{block.color.replace('bg-', '')} to-{block.color.replace('bg-', '')}/90 bg-gradient-to-br flex cursor-grab items-center space-x-3 rounded-xl text-white shadow-md transition-all duration-200 hover:shadow-lg hover:translate-y-[-2px] hover:scale-[1.02]"
+				class="p-4 from-{block.color.replace('bg-', '')} to-{block.color.replace(
+					'bg-',
+					''
+				)}/90 flex cursor-grab items-center space-x-3 rounded-xl bg-gradient-to-br text-white shadow-md transition-all duration-200 hover:translate-y-[-2px] hover:scale-[1.02] hover:shadow-lg"
 				role="button"
 				tabindex="0"
 			>
@@ -277,7 +284,7 @@
 			<ul
 				class="min-h-[300px] space-y-4 rounded-xl p-2
                {dragOverCanvas && draggingItem?.type === 'paletteItem' && $workflowSteps.length > 0
-					? 'bg-blue-50/70 outline-2 outline-blue-500 outline-dashed shadow-inner'
+					? 'bg-blue-50/70 shadow-inner outline-2 outline-blue-500 outline-dashed'
 					: ''}
                transition-all duration-300"
 			>
@@ -291,11 +298,14 @@
 						on:drop={(event) => handleWorkflowItemDrop(event, step.id)}
 						on:dragend={handleDragEnd}
 						role="listitem"
-						class="p-5 from-{step.color.replace('bg-', '')} to-{step.color.replace('bg-', '')}/90 bg-gradient-to-br group relative flex cursor-grab flex-col rounded-xl text-white shadow-lg
-                   transition-all duration-200 ease-in-out backdrop-blur-sm backdrop-saturate-150
+						class="p-5 from-{step.color.replace('bg-', '')} to-{step.color.replace(
+							'bg-',
+							''
+						)}/90 group relative flex cursor-grab flex-col rounded-xl bg-gradient-to-br text-white shadow-lg
+                   backdrop-blur-sm backdrop-saturate-150 transition-all duration-200 ease-in-out
                    {draggingItem?.id === step.id
-							? 'scale-95 opacity-60 shadow-xl rotate-1'
-							: 'scale-100 opacity-100 hover:shadow-xl hover:-translate-y-1'}
+							? 'scale-95 rotate-1 opacity-60 shadow-xl'
+							: 'scale-100 opacity-100 hover:-translate-y-1 hover:shadow-xl'}
                    {dragOverWorkflowItemId === step.id && draggingItem?.id !== step.id
 							? 'ring-4 ring-sky-400 ring-offset-2 ring-offset-gray-50'
 							: ''}"
@@ -308,7 +318,7 @@
 							</div>
 							<button
 								on:click={() => removeStep(step.id)}
-								class="rounded-full bg-black/30 p-1.5 text-white opacity-0 transition-all duration-200 group-hover:opacity-100 hover:bg-red-500/80 hover:text-white hover:scale-110 hover:rotate-12 active:scale-95"
+								class="rounded-full bg-black/30 p-1.5 text-white opacity-0 transition-all duration-200 group-hover:opacity-100 hover:scale-110 hover:rotate-12 hover:bg-red-500/80 hover:text-white active:scale-95"
 								aria-label="Remove step"
 							>
 								<svg
@@ -327,7 +337,7 @@
 							type="text"
 							bind:value={step.text}
 							on:change={(e) => updateStepText(step.id, (e.target as HTMLInputElement).value)}
-							class="mt-3 w-full rounded-lg border-none bg-white/25 p-3 text-white placeholder-white/70 outline-none shadow-inner transition-all duration-200 focus:bg-white/35 focus:ring-2 focus:ring-white/60 focus:shadow-md"
+							class="mt-3 w-full rounded-lg border-none bg-white/25 p-3 text-white placeholder-white/70 shadow-inner transition-all duration-200 outline-none focus:bg-white/35 focus:shadow-md focus:ring-2 focus:ring-white/60"
 							placeholder="Describe this step..."
 						/>
 					</li>
@@ -336,9 +346,12 @@
 		{/if}
 
 		{#if $workflowSteps.length > 0}
-			<div class="mt-10 rounded-xl bg-gradient-to-br from-gray-800 to-gray-900 p-5 text-gray-100 shadow-lg border border-gray-700/30">
+			<div
+				class="mt-10 rounded-xl border border-gray-700/30 bg-gradient-to-br from-gray-800 to-gray-900 p-5 text-gray-100 shadow-lg"
+			>
 				<h3 class="mb-3 text-xl font-bold text-sky-300">Current Workflow (Data)</h3>
-				<pre class="text-xs break-all whitespace-pre-wrap rounded-lg bg-black/30 p-4 shadow-inner overflow-x-auto">{JSON.stringify(
+				<pre
+					class="overflow-x-auto rounded-lg bg-black/30 p-4 text-xs break-all whitespace-pre-wrap shadow-inner">{JSON.stringify(
 						$workflowSteps,
 						null,
 						2
